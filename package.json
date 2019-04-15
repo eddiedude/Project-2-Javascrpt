@@ -1,0 +1,14 @@
+{
+    "name": "shell-demo",
+    "version": "1.0.0",
+    "main": "main.js",
+    "devDependencies": {
+        "electron": "^4.1.4"
+    },
+    "scripts": {
+        "start": "electron ."
+    },
+    "dependencies": {
+        "phaser-ce": "^2.12.0"
+    }
+}
