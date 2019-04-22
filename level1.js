@@ -1,5 +1,6 @@
 const fs = require('fs')
 
+
 var config = {
     type: Phaser.AUTO,
     width: 1150,
@@ -40,7 +41,6 @@ function preload () //Preloads images for use.
     this.load.image('sky', 'assets/background.png');
     this.load.image('ground', 'assets/msplatform.png');
     this.load.image('portal', 'assets/portal.png');
-    //this.load.image('star', 'assets/star.png');
     this.load.image('bomb', 'assets/mushmom.png');
     this.load.image('slime', 'assets/slimeresize.png');
     this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 }); //original 32, 48
@@ -52,22 +52,21 @@ var score = 0;  //Variable for the score.
 var scoreText
 var theFileArray;
 var theDirectory;
-
+var flag = 1;
 
 
 function create () //Creates() runs when the game starts.
 {
     
     this.add.image(575, 367, 'sky');
-    //this.add.image(1000, 580, 'portal');
+
     platforms = this.physics.add.staticGroup();
     portals = this.physics.add.staticGroup();
+
     portals.create(1000, 580, 'portal');
-    //portals.create()
     platforms.create(600,700, 'ground').setScale(2).refreshBody();
     platforms.create(300, 500, 'ground');
-    //platforms.create(50, 250, 'ground');
-    //platforms.create(750, 220, 'ground')
+
     player = this.physics.add.sprite(100, 500, 'dude');
     player.setBounce(0.2);
     player.setCollideWorldBounds(true);
@@ -83,7 +82,7 @@ function create () //Creates() runs when the game starts.
     });
 
     bombs = this.physics.add.group();
-
+    //portals = this.physics.add.group();
     stars.children.iterate(function (child){
         child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
     });
@@ -107,11 +106,14 @@ function create () //Creates() runs when the game starts.
         frameRate: 10,
         repeat: -1
     });
+
+    //Set colliders
     this.physics.add.collider(bombs, platforms);
     this.physics.add.collider(player, bombs, hitBomb, null, this);
     this.physics.add.collider(player, platforms);
     this.physics.add.collider(stars, platforms);
-    this.physics.add.collider(player, portals, hitPortal,null, this);
+    //this.physics.add.collider(player, portals, hitPortal,null, this);
+    this.physics.add.overlap(portals, player, hitPortal, null, this);
     this.physics.add.overlap(player, stars, collectStar, null, this);
 
     scoreText = this.add.text(16, 16, 'score: 0', {
@@ -171,6 +173,7 @@ function collectStar(player, star)
         var x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0,400);
 
         var bomb = bombs.create(x, 16, 'bomb');
+        //portal = portals.create(100, 580, 'portal');
         bomb.setBounce(1);
         bomb.setCollideWorldBounds(true);
         bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
@@ -179,7 +182,15 @@ function collectStar(player, star)
 
 function hitPortal(player, portals)
 {
-    console.log("touched portal.");
+    //var portal;
+    //create(100, 580, 'portal');
+    portals.disableBody(true, true);
+    newDirectory('folder1/newPortal');
+    //portals.create(100, 580, 'portal');
+    //var portal = portals.create(100, 580, 'portal');
+    //portal.disableBody(true, true);
+    //portal.create(100, 580, 'portal');
+    console.log("touched portal");
 }
 
 function pickingRoute()
@@ -220,6 +231,11 @@ const copyFile = (targetFile, copyname) =>
         }
         console.log(targetFile + " was copied to " + copyname);
     })
+}
+
+function newDirectory(path)
+{
+    fs.mkdirSync(path)
 }
 
 const deleteFile = (path) =>
