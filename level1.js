@@ -48,8 +48,8 @@ function preload () //Preloads images for use.
 var platforms;  //Variable for platform
 var player;     //Variable for the player.
 var portals;    //Variable for the portal.
-var score = 0;  //Variable for the score.
-var scoreText
+//var score = 0;  //Variable for the score.
+//var scoreText
 var theFileArray;
 var theDirectory;
 var flag = 1;
@@ -115,12 +115,12 @@ function create () //Creates() runs when the game starts.
     //this.physics.add.collider(player, portals, hitPortal,null, this);
     this.physics.add.overlap(portals, player, hitPortal, null, this);
     this.physics.add.overlap(player, stars, collectStar, null, this);
-
+    /*
     scoreText = this.add.text(16, 16, 'score: 0', {
         fontSize:'32px',
         fill: '#000'
     });
-
+    */
     cursor = this.input.keyboard.createCursorKeys();
     putText("hello")
 }
@@ -151,15 +151,35 @@ function update ()
 
 function collectStar(player, star)
 {   
+    var RNG = Phaser.Math.Between(0, 1);
     var i = stars.countActive(true) //Current count of files in the game(slimes).
     star.disableBody(true, true);   //Deletes the slime
 
     var thestring = getContents("folder1/"+ theDirectory +"/"+theFileArray[i - 1]);
     putText(thestring);
     deleteFile("folder1/" + theDirectory + "/" + theFileArray[i - 1]);
+    /*
+    if(RNG = 1)
+    {
+        star.disableBody(true, true);   //Deletes the slime
 
-    score += 10;
-    scoreText.setText('Score: ' + score);
+        var thestring = getContents("folder1/"+ theDirectory +"/"+theFileArray[i - 1]);
+        putText(thestring);
+        deleteFile("folder1/" + theDirectory + "/" + theFileArray[i - 1]);
+    }
+    else if(RNG = 0)
+    {
+        copyFile("folder1/"+theDirectory + "/" + theFileArray[i - 1], "folder1/"+theDirectory + "/" + theFileArray[i - 1] +"Copied" +Phaser.Math.Between(0,500));
+        var j = 0;
+        stars.children.iterate(function(child){
+            //writeFile("folder1/"+theDirectory + "/" +"lol"+ j + ".txt");
+            //j++;
+            child.enableBody(true, child.x, 0, true, true);
+        });
+    }
+    */
+    //score += 10;
+    //scoreText.setText('Score: ' + score);
 
     if(stars.countActive(true) == 0)
     {
