@@ -1,6 +1,6 @@
 const fs = require('fs')
 
-
+//Configuration for the game.
 var config = {
     type: Phaser.AUTO,
     width: 1150,
@@ -44,15 +44,13 @@ function preload () //Preloads images for use.
     this.load.image('bomb', 'assets/mushmom.png');
     this.load.image('slime', 'assets/slimeresize.png');
     this.load.image('star', 'assets/star.png');
-    //this.load.image('potion', 'assets/potion.png');
+    this.load.image('potion', 'assets/potion.png');
     this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 }); //original 32, 48
 }
 
 var platforms;  //Variable for platform
 var player;     //Variable for the player.
 var portals;    //Variable for the portal.
-//var score = 0;  //Variable for the score.
-//var scoreText
 var theFileArray;
 var theDirectory;
 
@@ -72,8 +70,8 @@ function create () //Creates() runs when the game starts.
     platforms.create(1200, 400, 'ground');
 
 
-    //potions = this.physics.add.group();
-    //potions.create(1100, 100, 'potion');
+    potions = this.physics.add.group();
+    potions.create(1100, 100, 'potion');
 
 
     player = this.physics.add.sprite(100, 500, 'dude');
@@ -86,14 +84,15 @@ function create () //Creates() runs when the game starts.
         setXY: {
             x: 50,
             y: 0,
-            stepX: Phaser.Math.Between(60, 300)
+            stepX: Phaser.Math.Between(60, 200)
         }
     });
 
     stars = this.physics.add.group();
     stars.create(50, 580, 'star');
+
     bombs = this.physics.add.group();
-    //portals = this.physics.add.group();
+
     slimes.children.iterate(function (child){
         child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
     });
@@ -108,7 +107,7 @@ function create () //Creates() runs when the game starts.
 
     this.anims.create({
         key: 'turn',
-        frames: [ { key: 'dude', frame: 4 } ], //original 4
+        frames: [ { key: 'dude', frame: 4 } ], 
         frameRate: 20
     });
 
@@ -125,19 +124,14 @@ function create () //Creates() runs when the game starts.
     this.physics.add.collider(player, platforms);
     this.physics.add.collider(slimes, platforms);
     this.physics.add.collider(stars, platforms);
-    //this.physics.add.collider(potions, platforms);
+    this.physics.add.collider(potions, platforms);
     this.physics.add.overlap(stars, player,pickUpStar ,null, this);
-    //this.physics.add.overlap(potions, player, pickUpPotion, null, this);
+    this.physics.add.overlap(potions, player, pickUpPotion, null, this);
     this.physics.add.overlap(portals, player, hitPortal, null, this);
     this.physics.add.overlap(player, slimes, collectStar, null, this);
-    /*
-    scoreText = this.add.text(16, 16, 'score: 0', {
-        fontSize:'32px',
-        fill: '#000'
-    });
-    */
+
+    //Enables arrows keys for control.
     cursor = this.input.keyboard.createCursorKeys();
-    //putText("hello")
 }
 
 function update ()
@@ -164,6 +158,8 @@ function update ()
     }
 }
 
+//Runs when user touches a slime. Deletes the file
+//Also displays information such as filesize and its contents.
 function collectStar(player, slime)
 {   
     var RNG = Phaser.Math.Between(0, 1);
@@ -171,7 +167,7 @@ function collectStar(player, slime)
     slime.disableBody(true, true);   //Deletes the slime
 
     var thestring = getContents("Portals/"+ theDirectory +"/"+theFileArray[i - 1]);
-    putText("Contents of File: " + thestring + "\nThe File Size is: " + getFilesizeInBytes("Portals/"+ theDirectory +"/"+theFileArray[i - 1]) + " Bytes");
+    putText("Deleted File\nContents of File: " + thestring + "\nThe File Size is: " + getFilesizeInBytes("Portals/"+ theDirectory +"/"+theFileArray[i - 1]) + " Bytes");
     deleteFile("Portals/" + theDirectory + "/" + theFileArray[i - 1]);
 
     if(slimes.countActive(true) == 0)
@@ -186,7 +182,6 @@ function collectStar(player, slime)
         var x = (player.x < 400) ? Phaser.Math.Between(400, 800) : Phaser.Math.Between(0,400);
 
         var bomb = bombs.create(x, 16, 'bomb');
-        //portal = portals.create(100, 580, 'portal');
         bomb.setBounce(1);
         bomb.setCollideWorldBounds(true);
         bomb.setVelocity(Phaser.Math.Between(-200, 200), 20);
@@ -199,7 +194,8 @@ function hitPortal(player, portals)
     portals.disableBody(true, true);
     var ranNum = Phaser.Math.Between(0,500);
     newDirectory("Portals/newPortal" + ranNum);
-    console.log("touched portal");
+    putText("Created Empty Directory newPortal" + ranNum);
+    //console.log("touched portal");
 }
 
 //Picking UP a star. If picked up a star it will create an empyfile at a random directory.
@@ -226,24 +222,31 @@ function pickingRoute()
     return theFileArray.length - 1;
 }
 
-/*
+//Runs when user touches a potion. Deletes all Empty Directories.
 function pickUpPotion(player, potion)
 {
-    console.log("All empty directories random Directory.")
+    var flag = 0;
     var list = getDirectory('Portals');
     var num = list.length;
+    console.log(list);
     potion.disableBody(true, true);
     for(i = 0; i < num; i++)
     {
-        console.log(i);
+
+        var answer = getDirectory("Portals/" + list[i]).length
+        if(answer == 0)
+        {
+            console.log(list[i] + " is empty");
+            putText("All empty directories are deleted in directory 'Portals'");
+            removeDirectory("Portals/" + list[i]);
+            flag = 1;
+        }
+        else if(flag == 0)
+        {
+            putText("There are no empty Directories to delete");
+        }
     }
-    //randomNum = Phaser.Math.Between(0, num);
-    //console.log("Inside Portal: "+list);
-    //console.log("RandomNumber"+randomNum);
-    //console.log("Removing Directory: " + "Portals/" + list[randomNum]);
-    //removeDirectory("Portals/" + list[randomNum]);
 }
-*/
 
 
 //This Run when the player hits the Mushroom
@@ -275,7 +278,7 @@ const copyFile = (targetFile, copyname) =>
 //removes a random directory
 function removeDirectory(path)
 {
-    fs.unlinkSync(path);
+    fs.rmdirSync(path);
 }
 
 //Creates a new Directory
