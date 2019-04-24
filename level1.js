@@ -44,6 +44,7 @@ function preload () //Preloads images for use.
     this.load.image('bomb', 'assets/mushmom.png');
     this.load.image('slime', 'assets/slimeresize.png');
     this.load.image('star', 'assets/star.png');
+    //this.load.image('potion', 'assets/potion.png');
     this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 }); //original 32, 48
 }
 
@@ -54,7 +55,6 @@ var portals;    //Variable for the portal.
 //var scoreText
 var theFileArray;
 var theDirectory;
-var flag = 1;
 
 
 function create () //Creates() runs when the game starts.
@@ -64,12 +64,17 @@ function create () //Creates() runs when the game starts.
 
     platforms = this.physics.add.staticGroup();
     portals = this.physics.add.staticGroup();
-    //stars = this.physics.add.staticGroup();
-    //this.add.image(50, 580, 'star');
-    //stars.create(50,500, 'star');
     portals.create(1000, 580, 'portal');
+
+    //Create platforms
     platforms.create(600,700, 'ground').setScale(2).refreshBody();
     platforms.create(300, 500, 'ground');
+    platforms.create(1200, 400, 'ground');
+
+
+    //potions = this.physics.add.group();
+    //potions.create(1100, 100, 'potion');
+
 
     player = this.physics.add.sprite(100, 500, 'dude');
     player.setBounce(0.2);
@@ -93,6 +98,7 @@ function create () //Creates() runs when the game starts.
         child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
     });
 
+    //Sprite Animations
     this.anims.create({
         key: 'left',
         frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
@@ -119,8 +125,9 @@ function create () //Creates() runs when the game starts.
     this.physics.add.collider(player, platforms);
     this.physics.add.collider(slimes, platforms);
     this.physics.add.collider(stars, platforms);
+    //this.physics.add.collider(potions, platforms);
     this.physics.add.overlap(stars, player,pickUpStar ,null, this);
-    //this.physics.add.collider(player, portals, hitPortal,null, this);
+    //this.physics.add.overlap(potions, player, pickUpPotion, null, this);
     this.physics.add.overlap(portals, player, hitPortal, null, this);
     this.physics.add.overlap(player, slimes, collectStar, null, this);
     /*
@@ -130,7 +137,7 @@ function create () //Creates() runs when the game starts.
     });
     */
     cursor = this.input.keyboard.createCursorKeys();
-    putText("hello")
+    //putText("hello")
 }
 
 function update ()
@@ -166,28 +173,6 @@ function collectStar(player, slime)
     var thestring = getContents("Portals/"+ theDirectory +"/"+theFileArray[i - 1]);
     putText("Contents of File: " + thestring + "\nThe File Size is: " + getFilesizeInBytes("Portals/"+ theDirectory +"/"+theFileArray[i - 1]) + " Bytes");
     deleteFile("Portals/" + theDirectory + "/" + theFileArray[i - 1]);
-    /*
-    if(RNG = 1)
-    {
-        star.disableBody(true, true);   //Deletes the slime
-
-        var thestring = getContents("folder1/"+ theDirectory +"/"+theFileArray[i - 1]);
-        putText(thestring);
-        deleteFile("folder1/" + theDirectory + "/" + theFileArray[i - 1]);
-    }
-    else if(RNG = 0)
-    {
-        copyFile("folder1/"+theDirectory + "/" + theFileArray[i - 1], "folder1/"+theDirectory + "/" + theFileArray[i - 1] +"Copied" +Phaser.Math.Between(0,500));
-        var j = 0;
-        slimes.children.iterate(function(child){
-            //writeFile("folder1/"+theDirectory + "/" +"lol"+ j + ".txt");
-            //j++;
-            child.enableBody(true, child.x, 0, true, true);
-        });
-    }
-    */
-    //score += 10;
-    //scoreText.setText('Score: ' + score);
 
     if(slimes.countActive(true) == 0)
     {
@@ -220,7 +205,7 @@ function hitPortal(player, portals)
 //Picking UP a star. If picked up a star it will create an empyfile at a random directory.
 function pickUpStar(player, star)
 {
-    var thePortal;
+    //var thePortal;
     var list = getDirectory('Portals');
     var num = list.length;
     star.disableBody(true, true);
@@ -234,12 +219,32 @@ function pickingRoute()
 {
     var anArray = getDirectory('Portals');  //Gets the contents of the directory.
     var randomNum = Phaser.Math.Between(0, anArray.length - 1); //Generates random number between the number of portals.
-    console.log("Going into: " + anArray[randomNum]);
+    //putText("Going into: " + anArray[randomNum] + "These are your enemies: " + theFileArray);
     theDirectory = anArray[randomNum];
     theFileArray = getDirectory('Portals/' + anArray[randomNum]);
-    console.log("There are your enemies: "+ theFileArray);
+    putText("You are in " + anArray[randomNum] + ".\tThese are your enemies: " + theFileArray);
     return theFileArray.length - 1;
 }
+
+/*
+function pickUpPotion(player, potion)
+{
+    console.log("All empty directories random Directory.")
+    var list = getDirectory('Portals');
+    var num = list.length;
+    potion.disableBody(true, true);
+    for(i = 0; i < num; i++)
+    {
+        console.log(i);
+    }
+    //randomNum = Phaser.Math.Between(0, num);
+    //console.log("Inside Portal: "+list);
+    //console.log("RandomNumber"+randomNum);
+    //console.log("Removing Directory: " + "Portals/" + list[randomNum]);
+    //removeDirectory("Portals/" + list[randomNum]);
+}
+*/
+
 
 //This Run when the player hits the Mushroom
 function hitBomb(player, bomb)
@@ -254,7 +259,6 @@ function hitBomb(player, bomb)
 //Writes a file to designated directory.
 const writeFile = (filename) =>
 {
-
     fs.writeFile(filename, "This file is located at " + filename, function(err){
         if(err)
         throw err;
@@ -268,6 +272,7 @@ const copyFile = (targetFile, copyname) =>
 
 }
 
+//removes a random directory
 function removeDirectory(path)
 {
     fs.unlinkSync(path);
