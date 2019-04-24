@@ -43,8 +43,10 @@ function preload () //Preloads images for use.
     this.load.image('portal', 'assets/portal.png');
     this.load.image('bomb', 'assets/mushmom.png');
     this.load.image('slime', 'assets/slimeresize.png');
+    this.load.image('star', 'assets/star.png');
     this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 }); //original 32, 48
 }
+
 var platforms;  //Variable for platform
 var player;     //Variable for the player.
 var portals;    //Variable for the portal.
@@ -58,11 +60,13 @@ var flag = 1;
 function create () //Creates() runs when the game starts.
 {
     
-    this.add.image(575, 367, 'sky');
+    this.add.image(575, 367, 'sky'); //Background
 
     platforms = this.physics.add.staticGroup();
     portals = this.physics.add.staticGroup();
-
+    //stars = this.physics.add.staticGroup();
+    //this.add.image(50, 580, 'star');
+    //stars.create(50,500, 'star');
     portals.create(1000, 580, 'portal');
     platforms.create(600,700, 'ground').setScale(2).refreshBody();
     platforms.create(300, 500, 'ground');
@@ -71,7 +75,7 @@ function create () //Creates() runs when the game starts.
     player.setBounce(0.2);
     player.setCollideWorldBounds(true);
     
-    stars = this.physics.add.group({
+    slimes = this.physics.add.group({
         key: 'slime',
         repeat: pickingRoute(),
         setXY: {
@@ -81,9 +85,11 @@ function create () //Creates() runs when the game starts.
         }
     });
 
+    stars = this.physics.add.group();
+    stars.create(50, 580, 'star');
     bombs = this.physics.add.group();
     //portals = this.physics.add.group();
-    stars.children.iterate(function (child){
+    slimes.children.iterate(function (child){
         child.setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
     });
 
@@ -111,10 +117,12 @@ function create () //Creates() runs when the game starts.
     this.physics.add.collider(bombs, platforms);
     this.physics.add.collider(player, bombs, hitBomb, null, this);
     this.physics.add.collider(player, platforms);
+    this.physics.add.collider(slimes, platforms);
     this.physics.add.collider(stars, platforms);
+    this.physics.add.overlap(stars, player,pickUpStar ,null, this);
     //this.physics.add.collider(player, portals, hitPortal,null, this);
     this.physics.add.overlap(portals, player, hitPortal, null, this);
-    this.physics.add.overlap(player, stars, collectStar, null, this);
+    this.physics.add.overlap(player, slimes, collectStar, null, this);
     /*
     scoreText = this.add.text(16, 16, 'score: 0', {
         fontSize:'32px',
@@ -149,15 +157,15 @@ function update ()
     }
 }
 
-function collectStar(player, star)
+function collectStar(player, slime)
 {   
     var RNG = Phaser.Math.Between(0, 1);
-    var i = stars.countActive(true) //Current count of files in the game(slimes).
-    star.disableBody(true, true);   //Deletes the slime
+    var i = slimes.countActive(true) //Current count of files in the game(slimes).
+    slime.disableBody(true, true);   //Deletes the slime
 
-    var thestring = getContents("folder1/"+ theDirectory +"/"+theFileArray[i - 1]);
-    putText(thestring);
-    deleteFile("folder1/" + theDirectory + "/" + theFileArray[i - 1]);
+    var thestring = getContents("Portals/"+ theDirectory +"/"+theFileArray[i - 1]);
+    putText("Contents of File: " + thestring + "\nThe File Size is: " + getFilesizeInBytes("Portals/"+ theDirectory +"/"+theFileArray[i - 1]) + " Bytes");
+    deleteFile("Portals/" + theDirectory + "/" + theFileArray[i - 1]);
     /*
     if(RNG = 1)
     {
@@ -171,7 +179,7 @@ function collectStar(player, star)
     {
         copyFile("folder1/"+theDirectory + "/" + theFileArray[i - 1], "folder1/"+theDirectory + "/" + theFileArray[i - 1] +"Copied" +Phaser.Math.Between(0,500));
         var j = 0;
-        stars.children.iterate(function(child){
+        slimes.children.iterate(function(child){
             //writeFile("folder1/"+theDirectory + "/" +"lol"+ j + ".txt");
             //j++;
             child.enableBody(true, child.x, 0, true, true);
@@ -181,11 +189,11 @@ function collectStar(player, star)
     //score += 10;
     //scoreText.setText('Score: ' + score);
 
-    if(stars.countActive(true) == 0)
+    if(slimes.countActive(true) == 0)
     {
         var i = 0;
-        stars.children.iterate(function(child){
-            writeFile("folder1/"+theDirectory + "/" +"lol"+ i + ".txt");
+        slimes.children.iterate(function(child){
+            writeFile("Portals/"+theDirectory + "/" +"lol"+ i + ".txt");
             i++;
             child.enableBody(true, child.x, 0, true, true);
         });
@@ -200,30 +208,40 @@ function collectStar(player, star)
     }
 }
 
+//This runs when you touch a portal. When you touch a portal it will create a new random empty directory.
 function hitPortal(player, portals)
 {
-    //var portal;
-    //create(100, 580, 'portal');
     portals.disableBody(true, true);
-    newDirectory('folder1/newPortal');
-    //portals.create(100, 580, 'portal');
-    //var portal = portals.create(100, 580, 'portal');
-    //portal.disableBody(true, true);
-    //portal.create(100, 580, 'portal');
+    var ranNum = Phaser.Math.Between(0,500);
+    newDirectory("Portals/newPortal" + ranNum);
     console.log("touched portal");
 }
 
+//Picking UP a star. If picked up a star it will create an empyfile at a random directory.
+function pickUpStar(player, star)
+{
+    var thePortal;
+    var list = getDirectory('Portals');
+    var num = list.length;
+    star.disableBody(true, true);
+    randomNum = Phaser.Math.Between(0, num - 1);
+    var ranFileNum = Phaser.Math.Between(0, 1000);
+    fs.writeFileSync("Portals/" + list[randomNum] + "/emptyFile" + ranFileNum + "", "");
+}
+
+//This gets a random directory to start. This runs when you start a new game.
 function pickingRoute()
 {
-    var anArray = getDirectory('folder1');  //Gets the contents of the directory.
+    var anArray = getDirectory('Portals');  //Gets the contents of the directory.
     var randomNum = Phaser.Math.Between(0, anArray.length - 1); //Generates random number between the number of portals.
     console.log("Going into: " + anArray[randomNum]);
     theDirectory = anArray[randomNum];
-    theFileArray = getDirectory('folder1/' + anArray[randomNum]);
+    theFileArray = getDirectory('Portals/' + anArray[randomNum]);
     console.log("There are your enemies: "+ theFileArray);
     return theFileArray.length - 1;
 }
 
+//This Run when the player hits the Mushroom
 function hitBomb(player, bomb)
 {
     this.physics.pause();
@@ -233,6 +251,7 @@ function hitBomb(player, bomb)
 }
 
 
+//Writes a file to designated directory.
 const writeFile = (filename) =>
 {
 
@@ -242,20 +261,29 @@ const writeFile = (filename) =>
     });
 }
 
+//Copies a file
 const copyFile = (targetFile, copyname) =>
 {
-    fs.copyFile(targetFile, copyname, (err) => {
-        if (err)
-        {
-            throw err;
-        }
-        console.log(targetFile + " was copied to " + copyname);
-    })
+    fs.copyFileSync(targetFile, copyname);
+
 }
 
+function removeDirectory(path)
+{
+    fs.unlinkSync(path);
+}
+
+//Creates a new Directory
 function newDirectory(path)
 {
     fs.mkdirSync(path)
+}
+
+//Gets the file size in Bytes.
+function getFilesizeInBytes(filename) {
+    var stats = fs.statSync(filename)
+    var fileSizeInBytes = stats["size"]
+    return fileSizeInBytes
 }
 
 const deleteFile = (path) =>
@@ -265,11 +293,15 @@ const deleteFile = (path) =>
     fs.unlinkSync(path);
 }
 
+
+//Gets the entire contents of that folder.
 function getDirectory(folder)
 {
     return fs.readdirSync(folder);
 }
 
+
+//Reads the data inside the file.
 const getContents = (path) =>
 { 
     return fs.readFileSync(path,'utf8' ,(err,data) =>{
